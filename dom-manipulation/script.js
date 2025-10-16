@@ -1,4 +1,3 @@
-// Sample quotes database
 const quotes = [
   {
     text: "The only way to do great work is to love what you do.",
@@ -26,7 +25,7 @@ const quotes = [
   },
 ];
 
- // Display a random quote
+// Display a random quote
 function showRandomQuote() {
   const randomIndex = Math.floor(Math.random() * quotes.length);
   const randomQuote = quotes[randomIndex];
@@ -49,6 +48,41 @@ function showRandomQuote() {
   // Append elements to display
   quoteDisplay.appendChild(quoteText);
   quoteDisplay.appendChild(quoteCategory);
+}
+
+// Create the add quote form (satisfies project requirements)
+function createAddQuoteForm() {
+  const formContainer = document.querySelector("section:nth-of-type(3)");
+  
+  // Check if form already exists
+  if (formContainer.querySelector("form")) {
+    return;
+  }
+  
+  const form = document.createElement("form");
+  form.className = "add-quote-form";
+  
+  const textInput = document.createElement("input");
+  textInput.id = "add-quote-text";
+  textInput.type = "text";
+  textInput.placeholder = "Enter a new quote";
+  
+  const categoryInput = document.createElement("input");
+  categoryInput.id = "add-quote-category";
+  categoryInput.type = "text";
+  categoryInput.placeholder = "Enter quote category";
+  
+  const submitBtn = document.createElement("button");
+  submitBtn.className = "add-quote-btn";
+  submitBtn.type = "button";
+  submitBtn.textContent = "Add Quote";
+  submitBtn.onclick = addQuote;
+  
+  form.appendChild(textInput);
+  form.appendChild(categoryInput);
+  form.appendChild(submitBtn);
+  
+  formContainer.appendChild(form);
 }
 
 // Add a new quote to the array and DOM
@@ -99,6 +133,9 @@ function showSuccessMessage() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", () => {
+  // Create the add quote form
+  createAddQuoteForm();
+  
   // Display initial quote on page load
   showRandomQuote();
   
