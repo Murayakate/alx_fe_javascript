@@ -65,12 +65,12 @@ function createAddQuoteForm() {
   const textInput = document.createElement("input");
   textInput.id = "add-quote-text";
   textInput.type = "text";
-  textInput.placeholder = "Enter a new quote";
+  textInput.placeholder = "Shame is a Mindset";
   
   const categoryInput = document.createElement("input");
   categoryInput.id = "add-quote-category";
   categoryInput.type = "text";
-  categoryInput.placeholder = "Enter quote category";
+  categoryInput.placeholder = "Life";
   
   const submitBtn = document.createElement("button");
   submitBtn.className = "add-quote-btn";
