@@ -78,7 +78,10 @@ h1:after {
   font-style: italic;
   text-align: center;
 }
+#add-quote-category{
+    margin-left:10px ;
 
+}
 
 .new-quote-btn {
   background: linear-gradient(to right, #ca12c4, #fc3325);
@@ -128,6 +131,7 @@ h1:after {
   transition: all 0.3s ease;
   box-shadow: 0 5px 15px rgba(37, 40, 12, 0.4);
   margin-top: 10px;
+  margin-left: 10px;
 }
 
 .add-quote-btn:hover {
