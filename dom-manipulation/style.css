@@ -12,13 +12,13 @@ body {
   justify-content: center;
   align-items: center;
   padding: 20px;
-  background-color: #2855bd;
+  background-color: #0d0e10;
 }
 
 .container1 {
   max-width: 800px;
   width: 100%;
-  background-color: rgba(158, 239, 239, 0.95);
+  background-color: rgba(121, 243, 243, 0.95);
   border-radius: 20px;
   box-shadow: 0 15px 30px rgba(44, 36, 36, 0.2);
   overflow: hidden;
