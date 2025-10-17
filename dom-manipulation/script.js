@@ -503,19 +503,24 @@ async function syncQuotes() {
 
 // Display notification to user about sync results
 // This provides feedback so user knows what happened
+// Shows UI element to inform users when data has been updated or if conflicts were resolved
 function showSyncNotification(syncResult) {
   const container = document.querySelector(".container1");
   const notification = document.createElement("div");
   notification.className = "sync-notification";
 
   // Build message based on sync results
-  let message = "📡 Sync Complete! ";
+  // Create a comprehensive notification message for the user
+  let message = "Quotes synced with server! ";
   if (syncResult.mergedCount > 0) {
+    // Inform user how many new quotes were added from server
     message += `Added ${syncResult.mergedCount} new quote(s). `;
   }
   if (syncResult.duplicateCount > 0) {
+    // Inform user how many duplicate quotes were found and skipped
     message += `${syncResult.duplicateCount} duplicate(s) skipped. `;
   }
+  // Show total quotes now available
   message += `Total: ${syncResult.totalLocalQuotes} quotes.`;
 
   notification.textContent = message;
@@ -531,6 +536,7 @@ function showSyncNotification(syncResult) {
   container.insertBefore(notification, container.firstChild);
 
   // Remove notification after 5 seconds so it doesn't clutter the screen
+  // User gets enough time to read the message but it doesn't linger
   setTimeout(() => {
     notification.remove();
   }, 5000);
