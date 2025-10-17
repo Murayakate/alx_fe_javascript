@@ -334,6 +334,243 @@ function loadSavedCategoryFilter() {
   }
 }
 
+// ==================== SERVER SYNC & CONFLICT RESOLUTION ====================
+
+// Simulate fetching quotes from a server using JSONPlaceholder API
+// This demonstrates how to interact with a real API endpoint
+// We use JSONPlaceholder's /posts endpoint and convert it to quote format
+async function fetchQuotesFromServer() {
+  try {
+    console.log("Fetching quotes from server...");
+    
+    // Fetch data from JSONPlaceholder API (a free mock API service)
+    // Limit to 5 posts to simulate fetching new quotes from server
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
+    
+    // Check if the request was successful (status 200-299)
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    // Convert the response to JSON format
+    const serverPosts = await response.json();
+
+    // Transform server posts into our quote format
+    // This converts posts from server format to our local quote format
+    // Each post becomes: { text: post.title, category: "Server" }
+    const serverQuotes = serverPosts.map((post) => ({
+      text: post.title,
+      category: "Server", // Mark these as coming from the server
+    }));
+
+    console.log(`Fetched ${serverQuotes.length} quotes from server`);
+    return serverQuotes;
+  } catch (error) {
+    console.error("Error fetching quotes from server:", error);
+    return []; // Return empty array if fetch fails
+  }
+}
+
+// Post local quotes to server for backup/syncing
+// This simulates sending local data to a server
+async function sendQuotesToServer(quotesToSync) {
+  try {
+    console.log(`Sending ${quotesToSync.length} quotes to server...`);
+
+    // Send quotes to server using POST request
+    // This simulates uploading local data to a backend
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST", // Use POST to send data to server
+      headers: {
+        "Content-Type": "application/json", // Tell server we're sending JSON
+      },
+      // Convert quotes array to JSON string
+      body: JSON.stringify({
+        quotes: quotesToSync,
+        timestamp: new Date().toISOString(), // Include when sync happened
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Quotes sent to server successfully");
+    return result;
+  } catch (error) {
+    console.error("Error sending quotes to server:", error);
+    return null;
+  }
+}
+
+// Check if two quotes are identical
+// This helper function compares quotes to detect duplicates
+function areQuotesEqual(quote1, quote2) {
+  // Compare text and category of both quotes
+  // Trim() removes whitespace, toLowerCase() makes comparison case-insensitive
+  return (
+    quote1.text.trim().toLowerCase() === quote2.text.trim().toLowerCase() &&
+    quote1.category.trim().toLowerCase() === quote2.category.trim().toLowerCase()
+  );
+}
+
+// Merge server quotes with local quotes using conflict resolution
+// Strategy: Server data takes precedence, avoid duplicates
+function mergeQuotesWithConflictResolution(serverQuotes) {
+  let mergedCount = 0;
+  let conflictCount = 0;
+  let duplicateCount = 0;
+
+  // Loop through each server quote
+  serverQuotes.forEach((serverQuote) => {
+    // Check if this quote already exists in local quotes
+    // some() returns true if any local quote matches the server quote
+    const isDuplicate = quotes.some((localQuote) =>
+      areQuotesEqual(localQuote, serverQuote)
+    );
+
+    if (isDuplicate) {
+      // Quote already exists locally, no need to add it
+      duplicateCount++;
+      console.log(`Duplicate found: "${serverQuote.text.substring(0, 30)}..."`);
+    } else {
+      // New quote from server, add it to local quotes
+      quotes.push(serverQuote);
+      mergedCount++;
+      console.log(`New quote added from server: "${serverQuote.text.substring(0, 30)}..."`);
+    }
+  });
+
+  // Calculate conflict count (would increase if we had different merge strategies)
+  conflictCount = 0;
+
+  // Return summary of what happened during merge
+  return {
+    mergedCount,
+    duplicateCount,
+    conflictCount,
+    totalLocalQuotes: quotes.length,
+  };
+}
+
+// Sync data with server and handle any conflicts
+// This is the main function that orchestrates the sync process
+async function syncDataWithServer() {
+  try {
+    console.log("Starting data sync with server...");
+
+    // Step 1: Fetch new quotes from server
+    const serverQuotes = await fetchQuotesFromServer();
+
+    if (serverQuotes.length === 0) {
+      console.log("No new quotes from server");
+      return;
+    }
+
+    // Step 2: Merge server quotes with local quotes using conflict resolution
+    // Server data takes precedence in our strategy
+    const syncResult = mergeQuotesWithConflictResolution(serverQuotes);
+
+    // Step 3: Save updated local data to storage
+    if (syncResult.mergedCount > 0) {
+      saveQuotesToLocalStorage();
+      console.log("Local storage updated after sync");
+    }
+
+    // Step 4: Update UI elements to reflect new data
+    populateCategories(); // Refresh category dropdown
+    updateQuoteCount(); // Update quote counter
+
+    // Step 5: Show notification to user about sync results
+    showSyncNotification(syncResult);
+
+    // Step 6: Send local quotes back to server for backup
+    // This ensures server has latest data too
+    await sendQuotesToServer(quotes);
+  } catch (error) {
+    console.error("Error during data sync:", error);
+    showErrorNotification("Sync failed. Please try again later.");
+  }
+}
+
+// Display notification to user about sync results
+// This provides feedback so user knows what happened
+function showSyncNotification(syncResult) {
+  const container = document.querySelector(".container1");
+  const notification = document.createElement("div");
+  notification.className = "sync-notification";
+
+  // Build message based on sync results
+  let message = "📡 Sync Complete! ";
+  if (syncResult.mergedCount > 0) {
+    message += `Added ${syncResult.mergedCount} new quote(s). `;
+  }
+  if (syncResult.duplicateCount > 0) {
+    message += `${syncResult.duplicateCount} duplicate(s) skipped. `;
+  }
+  message += `Total: ${syncResult.totalLocalQuotes} quotes.`;
+
+  notification.textContent = message;
+  notification.style.cssText = `
+    background: #4caf50;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    animation: slideIn 0.3s ease-out;
+  `;
+
+  container.insertBefore(notification, container.firstChild);
+
+  // Remove notification after 5 seconds so it doesn't clutter the screen
+  setTimeout(() => {
+    notification.remove();
+  }, 5000);
+}
+
+// Display error notification to user
+function showErrorNotification(message) {
+  const container = document.querySelector(".container1");
+  const notification = document.createElement("div");
+  notification.className = "error-notification";
+  notification.textContent = "❌ " + message;
+  notification.style.cssText = `
+    background: #f44336;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    animation: slideIn 0.3s ease-out;
+  `;
+
+  container.insertBefore(notification, container.firstChild);
+
+  // Remove after 5 seconds
+  setTimeout(() => {
+    notification.remove();
+  }, 5000);
+}
+
+// Enable periodic syncing at set intervals
+// This automatically syncs data without user action
+function startPeriodicSync(intervalMs = 30000) {
+  // Default: sync every 30 seconds
+  // In production, this would be much longer (e.g., every 5 minutes)
+
+  console.log(`Periodic sync enabled. Will sync every ${intervalMs}ms`);
+
+  // Use setInterval to run sync function repeatedly
+  // setInterval returns an ID we can use to stop it later
+  const syncIntervalId = setInterval(() => {
+    syncDataWithServer();
+  }, intervalMs);
+
+  // Store the interval ID so it can be cleared later if needed
+  // For example: clearInterval(window.syncIntervalId)
+  window.syncIntervalId = syncIntervalId;
+}
+
 // Export quotes to JSON file
 function exportQuotesAsJSON() {
   try {
