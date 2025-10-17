@@ -456,11 +456,14 @@ function mergeQuotesWithConflictResolution(serverQuotes) {
 
 // Sync data with server and handle any conflicts
 // This is the main function that orchestrates the sync process
-async function syncDataWithServer() {
+// Periodically checks for new quotes from the server and updates local storage
+// Also handles conflict resolution when discrepancies are found
+async function syncQuotes() {
   try {
     console.log("Starting data sync with server...");
 
     // Step 1: Fetch new quotes from server
+    // This retrieves any quotes that have been added/updated on the server
     const serverQuotes = await fetchQuotesFromServer();
 
     if (serverQuotes.length === 0) {
@@ -470,23 +473,27 @@ async function syncDataWithServer() {
 
     // Step 2: Merge server quotes with local quotes using conflict resolution
     // Server data takes precedence in our strategy
+    // This function checks for duplicates and only adds new quotes
     const syncResult = mergeQuotesWithConflictResolution(serverQuotes);
 
     // Step 3: Save updated local data to storage
+    // Update local storage with the merged quotes
     if (syncResult.mergedCount > 0) {
       saveQuotesToLocalStorage();
       console.log("Local storage updated after sync");
     }
 
     // Step 4: Update UI elements to reflect new data
+    // Refresh the category dropdown in case new categories were added
     populateCategories(); // Refresh category dropdown
     updateQuoteCount(); // Update quote counter
 
     // Step 5: Show notification to user about sync results
+    // Display feedback about what was synced and any conflicts resolved
     showSyncNotification(syncResult);
 
     // Step 6: Send local quotes back to server for backup
-    // This ensures server has latest data too
+    // This ensures server has latest data too (bidirectional sync)
     await sendQuotesToServer(quotes);
   } catch (error) {
     console.error("Error during data sync:", error);
@@ -554,6 +561,7 @@ function showErrorNotification(message) {
 
 // Enable periodic syncing at set intervals
 // This automatically syncs data without user action
+// Periodically checks for new quotes from the server
 function startPeriodicSync(intervalMs = 30000) {
   // Default: sync every 30 seconds
   // In production, this would be much longer (e.g., every 5 minutes)
@@ -562,8 +570,9 @@ function startPeriodicSync(intervalMs = 30000) {
 
   // Use setInterval to run sync function repeatedly
   // setInterval returns an ID we can use to stop it later
+  // This ensures data stays fresh by checking server at regular intervals
   const syncIntervalId = setInterval(() => {
-    syncDataWithServer();
+    syncQuotes(); // Call the syncQuotes function repeatedly
   }, intervalMs);
 
   // Store the interval ID so it can be cleared later if needed
@@ -690,6 +699,19 @@ document.addEventListener("DOMContentLoaded", () => {
       // Display quote based on restored filter
       filterQuotes();
     });
+  }
+
+  // Start periodic syncing with server
+  // Sync every 30 seconds (adjust as needed for your use case)
+  // In production, you'd typically use longer intervals (5-10 minutes)
+  startPeriodicSync(30000);
+
+  // Add a manual sync button if you want users to sync on demand
+  // This gives users control over when syncing happens
+  // Users can click to manually trigger a sync with the server
+  const syncBtn = document.getElementById("sync-btn");
+  if (syncBtn) {
+    syncBtn.addEventListener("click", syncQuotes);
   }
 
   // Add Enter key functionality to input fields for better UX
