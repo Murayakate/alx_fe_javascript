@@ -206,15 +206,17 @@ function updateQuoteCount() {
 // This function loops through all quotes and collects all unique categories
 // For example: if quotes have "Inspiration", "Life", "Inspiration" - it returns ["Inspiration", "Life"]
 function populateCategories() {
+  // Use map() to extract all categories from quotes array
+  // map() transforms each quote object into just its category string
+  // For example: [{text: "...", category: "Life"}, ...] becomes ["Life", ...]
+  const allCategories = quotes.map((quote) => quote.category);
+
   // Use Set to automatically remove duplicates - Set only stores unique values
-  const uniqueCategories = new Set();
-  
-  // Loop through each quote and add its category to the Set
-  quotes.forEach((quote) => {
-    uniqueCategories.add(quote.category);
-  });
+  // new Set(["Life", "Inspiration", "Life"]) becomes Set { "Life", "Inspiration" }
+  const uniqueCategories = new Set(allCategories);
 
   // Convert Set back to Array and sort alphabetically for better UX
+  // Array.from converts Set to Array, then sort() arranges them A-Z
   const sortedCategories = Array.from(uniqueCategories).sort();
 
   // Get the dropdown element from HTML
@@ -229,7 +231,8 @@ function populateCategories() {
   categoryFilter.innerHTML = '<option value="all">All Categories</option>';
 
   // Add each unique category as a new option in the dropdown
-  sortedCategories.forEach((category) => {
+  // map() creates option elements for each category
+  sortedCategories.map((category) => {
     const option = document.createElement("option");
     option.value = category;
     option.textContent = category;
