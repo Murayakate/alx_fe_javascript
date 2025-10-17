@@ -8,24 +8,37 @@
   </head>
   <body>
     <div class="container1">
-   
       <header>
         <h1>Dynamic Quote Generator</h1>
         <p>Get a quote or make one of your own</p>
       </header>
 
       <main>
-        <section >
+        <section>
           <div class="quote-text" id="quote-display"></div>
         </section>
 
         <section>
-        <button class="new-quote-btn" id="new-quote-btn">Show New Quote</button>
+          <button class="new-quote-btn" id="new-quote-btn">
+            Show New Quote
+          </button>
         </section>
- <!--this is where the form of the quotesthe user added themselves located in the  the third section of main tag   -->
+        <!--this is where the form of the quotesthe user added themselves located in the  the third section of main tag   -->
+        <section></section>
+
         <section>
-        
+          <div class="quote-count">
+            Total Quotes: <strong id="quote-count">6</strong>
+          </div>
+          <div class="storage-controls">
+            <button class="export-btn" id="export-btn">
+              📥 Export as JSON
+            </button>
+            <label class="import-label" for="importFile">📤 Import JSON</label>
+            <input type="file" id="importFile" accept=".json" />
+          </div>
         </section>
+        
       </main>
     </div>
 
